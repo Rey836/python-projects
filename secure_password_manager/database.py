@@ -31,15 +31,17 @@ class DatabaseManager:
         with closing(self.connect()) as conn:
             cursor = conn.cursor()
 
+            # Users table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                salt BLOB NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """)
-
+            # Password vault table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS vault(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -209,3 +211,23 @@ class DatabaseManager:
             )
 
             conn.commit()
+
+    def get_user_by_username(self, username: str):
+        """
+        Retrieve a user by username.
+        """
+
+        with closing(self.connect()) as conn:
+
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM users
+                WHERE username = ?
+                """,
+                (username,)
+            )
+
+            return cursor.fetchone()
